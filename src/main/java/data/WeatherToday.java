@@ -1,9 +1,11 @@
+package data;
+
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import java.text.*;
 import java.util.Date;
+
 
 /**
  * @author Sand, sve.snd@gmail.com, http://sanddev.ru
@@ -11,9 +13,11 @@ import java.util.Date;
  * @created 15.10.2022
  */
 
-public class WeatherData {
+public class WeatherToday {
+    private boolean isEmpty;
+
+    private Date date;
     private long timeZone;
-    private Date time;
     private long visibility;
     private String cityName;
 
@@ -41,81 +45,98 @@ public class WeatherData {
     private double windSpeed;
     private double windGust;
 
-    public WeatherData() {
-        this.cityName = "";
-        this.country = "";
-    }
-
-    public void print() {
-        SimpleDateFormat df = new SimpleDateFormat("dd.MM.yyyy HH:mm");
-
-        System.out.printf("There is weather today (%s):\n", df.format(time));
-        System.out.printf("City: %s\n", cityName);
-        System.out.printf("Temperature: %.2f\u2103 (%.2f\u2103-%.2f\u2103)\n", temp, tempMin, tempMax);
-        System.out.printf("Visibility: %s\n", visibility);
+    public WeatherToday() {
+        isEmpty = true;
+        date = new Date();
+        cityName = "";
+        country = "";
     }
 
     // Parsing
 
     public void parse(String JsonString) {
-        JSONObject jsonRoot = getJson(JsonString);
+        JSONObject jsonRoot = getJsonObject(JsonString);
 
         if(jsonRoot==null)
             return;
 
-        int resultCode = ((Long) jsonRoot.get("cod")).intValue();
+        String resultCode = jsonRoot.get("cod").toString();
         switch(resultCode) {
-            case 200:
+            case "200":
                 // OK
                 break;
-            case 404:
-                String message = (String) jsonRoot.get("message");
-                System.out.println(message);
+            case "404":
+                String message = jsonRoot.get("message").toString();
+                System.out.printf(message);
                 return;
         }
 
-        this.timeZone = ((long) jsonRoot.get("timezone")) / 3600;
-        this.visibility = (long) jsonRoot.get("visibility");
-        this.cityName = (String) jsonRoot.get("name");
-        this.time = new Date( ((Long) jsonRoot.get("dt")) * 1000 );
+        timeZone = ((long) jsonRoot.get("timezone")) / 3600;
+        visibility = (long) jsonRoot.get("visibility");
+        cityName = (String) jsonRoot.get("name");
+        date = new Date( ((Long) jsonRoot.get("dt")) * 1000 );
 
         JSONObject jsonMain = (JSONObject) jsonRoot.get("main");
-        this.temp = kelvinToCelsius((double) jsonMain.get("temp"));
-        this.tempMin = kelvinToCelsius((double) jsonMain.get("temp_min"));
-        this.tempMax = kelvinToCelsius((double) jsonMain.get("temp_max"));
-        this.tempFeels = kelvinToCelsius((double) jsonMain.get("feels_like"));
-        this.groundLevel = (long) jsonMain.get("grnd_level");
-        this.humidity = (long) jsonMain.get("humidity");
-        this.pressure = (long) jsonMain.get("pressure");
-        this.seaLevel = (long) jsonMain.get("sea_level");
+        temp = kelvinToCelsius((double) jsonMain.get("temp"));
+        tempMin = kelvinToCelsius((double) jsonMain.get("temp_min"));
+        tempMax = kelvinToCelsius((double) jsonMain.get("temp_max"));
+        tempFeels = kelvinToCelsius((double) jsonMain.get("feels_like"));
+        groundLevel = (long) jsonMain.get("grnd_level");
+        humidity = (long) jsonMain.get("humidity");
+        pressure = (long) jsonMain.get("pressure");
+        seaLevel = (long) jsonMain.get("sea_level");
 
         JSONObject jsonSys = (JSONObject) jsonRoot.get("sys");
-        this.country = (String) jsonSys.get("country");
-        this.sunrise = (long) jsonSys.get("sunrise");
-        this.sunset = (long) jsonSys.get("sunset");
+        country = (String) jsonSys.get("country");
+        sunrise = (long) jsonSys.get("sunrise");
+        sunset = (long) jsonSys.get("sunset");
 
         JSONObject jsonCoord = (JSONObject) jsonRoot.get("coord");
-        this.longitude = (double) jsonCoord.get("lon");
-        this.latitude = (double) jsonCoord.get("lat");
+        longitude = (double) jsonCoord.get("lon");
+        latitude = (double) jsonCoord.get("lat");
 
         JSONObject jsonWind = (JSONObject) jsonRoot.get("wind");
-        this.windDeg = (long) jsonWind.get("deg");
-        this.windSpeed = (double) jsonWind.get("speed");
-        this.windGust = (double) jsonWind.get("gust");
+        windDeg = (long) jsonWind.get("deg");
+        windSpeed = (double) jsonWind.get("speed");
+        windGust = (double) jsonWind.get("gust");
+
+        isEmpty = false;
     }
 
-    private JSONObject getJson(String JsonString) {
+    public boolean isCityAvailable(String JsonString) {
+        JSONObject jsonRoot = getJsonObject(JsonString);
+
+        if(jsonRoot==null)
+            return false;
+
+        String resultCode = jsonRoot.get("cod").toString();
+        if(resultCode.equals("200"))
+            return true;
+        else {
+            String message = jsonRoot.get("message").toString();
+            System.out.printf(message);
+        }
+        return false;
+    }
+
+    private JSONObject getJsonObject(String JsonString) {
         JSONParser parser = new JSONParser();
         JSONObject object = null;
+
+        if(JsonString.isEmpty())
+            return object;
+
         try {
             object = (JSONObject) parser.parse(JsonString);
         } catch (ParseException e) {
-            e.printStackTrace();
+            System.out.println(e.getLocalizedMessage());
+            return object;
         }
         return object;
     }
 
     // Service methods
+
     private double kelvinToCelsius(double kelvin) {
         return kelvin - 273.15;
     }
@@ -132,7 +153,7 @@ public class WeatherData {
     public long getVisibilityDistance() {
         return visibility;
     }
-    public String getCityName() {
+    public String getCity() {
         return cityName;
     }
     public double getTemp() {
@@ -183,7 +204,11 @@ public class WeatherData {
     public double getWindGust() {
         return windGust;
     }
-    public Date getDateTime() {
-        return time;
+    public Date getDate() {
+        return date;
+    }
+
+    public boolean isEmpty() {
+        return isEmpty;
     }
 }

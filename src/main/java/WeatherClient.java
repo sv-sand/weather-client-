@@ -1,3 +1,4 @@
+import data.WeatherToday;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.conn.scheme.Scheme;
@@ -6,6 +7,10 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Locale;
+import java.util.ResourceBundle;
 
 /**
  * @author Sand, sve.snd@gmail.com, http://sanddev.ru
@@ -14,30 +19,49 @@ import java.io.IOException;
  */
 
 public class WeatherClient {
-    private final static String URL = "https://api.openweathermap.org/data/2.5/weather";
+    private final static String URL = "https://api.openweathermap.org/data/2.5";
     private final static String API_ID = "1d3d713e2df49f3ed91c8989e1812715";
 
-    private static String cityName;
     private DefaultHttpClient client;
+    private Locale locale;
+    private ResourceBundle langResource;
 
-    public WeatherClient(String cityName) {
-        this.cityName = cityName;
+    private WeatherToday weatherToday;
+    private String cityName;
+    private String lang;
+
+    public WeatherClient() {
+        setLanguage("en");
+        weatherToday = new WeatherToday();
+
         initHttpClient();
     }
 
-    public WeatherData getWeatherData() {
-        String JsonString = getJsonData();
-        WeatherData wd = new WeatherData();
-        wd.parse(JsonString);
+    public WeatherToday loadWeatherToday() {
+        String url = URL + "/weather?q="+cityName+"&appid="+API_ID+"&lang="+lang;
+        String JsonString = getJsonWeatherToday(url);
+        weatherToday.parse(JsonString);
 
-        return wd;
+        return weatherToday;
+    }
+
+    public void printWeatherToday() {
+        DateFormat df = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, locale);
+
+        if(weatherToday.isEmpty()){
+            System.out.println(langResource.getString("ErrorNoData"));
+            return;
+        }
+
+        System.out.printf(langResource.getString("ThereIsWeatherToday"), df.format(weatherToday.getDate()));
+        System.out.printf(langResource.getString("City"), weatherToday.getCity());
+        System.out.printf(langResource.getString("Temperature"), weatherToday.getTempMin(), weatherToday.getTempMax());
+        System.out.printf(langResource.getString("Visibility"), weatherToday.getVisibilityDistance());
+        System.out.printf(langResource.getString("Pressure"), weatherToday.getPressure());
+        System.out.printf(langResource.getString("WindSpeed"), weatherToday.getWindSpeed());
     }
 
     // HTTP client
-
-    private String getURL() {
-        return URL + "?q="+cityName+"&appid="+API_ID;
-    }
 
     private void initHttpClient(){
         // Prepare ssl
@@ -50,25 +74,75 @@ public class WeatherClient {
         client.getConnectionManager().getSchemeRegistry().register(httpsScheme);
     }
 
-    private String getJsonData() {
+    private String getJsonWeatherToday(String url) {
         String result = "";
 
-        HttpGet request = new HttpGet(getURL());
+        HttpGet request = new HttpGet(url);
         HttpResponse response = null;
         try {
             response = client.execute(request);
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println(e.getLocalizedMessage());
             return result;
         }
 
         try {
             result = EntityUtils.toString(response.getEntity(), "UTF-8");
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println(e.getLocalizedMessage());
             return "";
         }
 
         return result;
+    }
+
+    // Getters & setters
+
+    public WeatherToday getWeatherData() {
+        return weatherToday;
+    }
+    public String getCity() {
+        return cityName;
+    }
+    public boolean setCity(String cityName) {
+        String url = URL + "/weather?q="+cityName+"&appid="+API_ID+"&lang="+lang;
+        String JsonString = getJsonWeatherToday(url);
+        boolean result = weatherToday.isCityAvailable(JsonString);
+
+        if(result)
+            this.cityName = cityName;
+
+        return result;
+    }
+    public String getLanguage() {
+        return lang;
+    }
+    public boolean setLanguage(String langCode) {
+        String language, country, baseName;
+
+        if(langCode.equals(lang))
+            return true;
+
+        switch(langCode){
+            case "en":
+                language = "en";
+                country = "EN";
+                baseName = "lang.en_EN";
+                break;
+            case "ru":
+                language = "ru";
+                country = "RU";
+                baseName = "lang.ru_RU";
+                break;
+            default:
+                System.out.printf(langResource.getString("ErrorLangCode"), langCode);
+                return false;
+        }
+
+        lang = langCode;
+        locale = new Locale(language, country);
+        langResource = ResourceBundle.getBundle(baseName, locale);
+
+        return true;
     }
 }

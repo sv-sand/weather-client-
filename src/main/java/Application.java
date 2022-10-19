@@ -1,7 +1,3 @@
-import java.io.IOException;
-import java.security.*;
-import java.security.cert.CertificateException;
-
 /**
  * @author Sand, sve.snd@gmail.com, http://sanddev.ru
  * @project weather-client
@@ -10,8 +6,10 @@ import java.security.cert.CertificateException;
 
 public class Application {
     public static void main(String[] args) {
-        WeatherClient client = new WeatherClient("Moscow");
-        WeatherData wd = client.getWeatherData();
-        wd.print();
+        WeatherClient client = new WeatherClient();
+        client.setLanguage("ru");
+        client.setCity("Moscow");
+        client.loadWeatherToday();
+        client.printWeatherToday();
     }
 }
