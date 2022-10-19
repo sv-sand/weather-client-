@@ -14,8 +14,7 @@ import java.util.ResourceBundle;
 
 /**
  * @author Sand, sve.snd@gmail.com, http://sanddev.ru
- * @project weather-client
- * @created 16.05.2022
+ * @since 16.05.2022
  */
 
 public class WeatherClient {
@@ -78,7 +77,7 @@ public class WeatherClient {
         String result = "";
 
         HttpGet request = new HttpGet(url);
-        HttpResponse response = null;
+        HttpResponse response;
         try {
             response = client.execute(request);
         } catch (IOException e) {
@@ -120,23 +119,24 @@ public class WeatherClient {
     public boolean setLanguage(String langCode) {
         String language, country, baseName;
 
-        if(langCode.equals(lang))
+        if (langCode.equals(lang))
             return true;
 
-        switch(langCode){
-            case "en":
+        switch (langCode) {
+            case "en" -> {
                 language = "en";
                 country = "EN";
                 baseName = "lang.en_EN";
-                break;
-            case "ru":
+            }
+            case "ru" -> {
                 language = "ru";
                 country = "RU";
                 baseName = "lang.ru_RU";
-                break;
-            default:
+            }
+            default -> {
                 System.out.printf(langResource.getString("ErrorLangCode"), langCode);
                 return false;
+            }
         }
 
         lang = langCode;

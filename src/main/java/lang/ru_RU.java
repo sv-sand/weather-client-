@@ -4,14 +4,13 @@ import java.util.ListResourceBundle;
 
 /**
  * @author Sand, sve.snd@gmail.com, http://sanddev.ru
- * @project weather-client
- * @created 16.10.2022
+ * @since 16.10.2022
  */
 
 public class ru_RU extends ListResourceBundle {
     @Override
     protected Object[][] getContents() {
-        Object[][] result =  new Object[][] {
+        return  new Object[][] {
                 {"ThereIsWeatherToday", "Погода на сегодня (%s)\n"},
                 {"City", "Город: %s\n"},
                 {"Temperature", "Температура: %.0f\u2103-%.0f\u2103\n"},
@@ -22,7 +21,5 @@ public class ru_RU extends ListResourceBundle {
                 {"ErrorLangCode", "Ошибка: не правильный код языка %s\n"},
                 {"ErrorNoData", "Ошибка: нет данных.\n"}
         };
-
-        return result;
     }
 }

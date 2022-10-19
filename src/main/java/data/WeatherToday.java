@@ -9,8 +9,7 @@ import java.util.Date;
 
 /**
  * @author Sand, sve.snd@gmail.com, http://sanddev.ru
- * @project weather-client
- * @created 15.10.2022
+ * @since 15.10.2022
  */
 
 public class WeatherToday {
@@ -66,8 +65,7 @@ public class WeatherToday {
                 // OK
                 break;
             case "404":
-                String message = jsonRoot.get("message").toString();
-                System.out.printf(message);
+                System.out.print(jsonRoot.get("message").toString());
                 return;
         }
 
@@ -113,8 +111,7 @@ public class WeatherToday {
         if(resultCode.equals("200"))
             return true;
         else {
-            String message = jsonRoot.get("message").toString();
-            System.out.printf(message);
+            System.out.print(jsonRoot.get("message").toString());
         }
         return false;
     }
@@ -139,10 +136,6 @@ public class WeatherToday {
 
     private double kelvinToCelsius(double kelvin) {
         return kelvin - 273.15;
-    }
-
-    private double round(double number, int accuracy) {
-        return Math.round(number * accuracy) / accuracy;
     }
 
     // Getters & setters
