@@ -21,7 +21,7 @@ import java.util.ResourceBundle;
 
 public class WeatherClient {
     private final static String URL = "https://api.openweathermap.org/data/2.5";
-    private final static String API_ID = "1d3d713e2df49f3ed91c8989e1812715";
+    private String apiId;
 
     private DefaultHttpClient client;
 
@@ -34,7 +34,8 @@ public class WeatherClient {
     private WeatherToday weatherToday;
     private String cityName;
 
-    public WeatherClient() {
+    public WeatherClient(String apiId) {
+        this.apiId = apiId;
 
         // Init default language
         lang = "en";
@@ -47,7 +48,7 @@ public class WeatherClient {
     }
 
     public WeatherToday loadWeatherToday() throws WeatherException {
-        String url = URL + "/weather?q="+cityName+"&appid="+API_ID+"&lang="+lang;
+        String url = URL + "/weather?q="+cityName+"&appid="+ apiId +"&lang="+lang;
         String JsonString = connectHttpService(url);
 
         JSONObject jsonObject = getJsonObject(JsonString);
@@ -148,62 +149,34 @@ public class WeatherClient {
 
     // Localized text for user
 
-    public String getTextHeader() {
+    public String getTextWeatherToday() {
+        String result = "";
         if(weatherToday.isEmpty())
-            return "";
+            return result;
 
         DateFormat df = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, locale);
 
-        return String.format(
+        result = String.format(
                 langResource.getString("ThereIsWeatherToday"),
                 df.format(weatherToday.getDate())
-        );
-    }
-    public String getTextCity() {
-        if(weatherToday.isEmpty())
-            return "";
-
-        return String.format(
+        ) + "\n" + String.format(
                 langResource.getString("City"),
                 weatherToday.getCity()
-        );
-    }
-    public String getTextTemp() {
-        if(weatherToday.isEmpty())
-            return "";
-
-        return String.format(
+        ) + "\n" + String.format(
                 langResource.getString("Temperature"),
                 weatherToday.getTempMin(),
                 weatherToday.getTempMax()
-        );
-    }
-    public String getTextVisibility() {
-        if(weatherToday.isEmpty())
-            return "";
-
-        return String.format(
+        ) + "\n" + String.format(
                 langResource.getString("Visibility"),
                 weatherToday.getVisibilityDistance()
-        );
-    }
-    public String getTextPressure() {
-        if(weatherToday.isEmpty())
-            return "";
-
-        return String.format(
+        ) + "\n" + String.format(
                 langResource.getString("Pressure"),
                 weatherToday.getPressure()
-        );
-    }
-    public String getTextWindSpeed() {
-        if(weatherToday.isEmpty())
-            return "";
-
-        return String.format(
+        ) + "\n" + String.format(
                 langResource.getString("WindSpeed"),
                 weatherToday.getWindSpeed()
         );
+        return result;
     }
 
     // Getters & setters
@@ -214,8 +187,11 @@ public class WeatherClient {
     public String getCity() {
         return cityName;
     }
-    public void setCity(String cityName) throws WeatherException {
-        String url = URL + "/weather?q="+cityName+"&appid="+API_ID+"&lang="+lang;
+    public void setCity(String cityName) {
+        this.cityName = cityName;
+    }
+    public void setCityAndCheck(String cityName) throws WeatherException {
+        String url = URL + "/weather?q="+cityName+"&appid="+ apiId +"&lang="+lang;
         String JsonString = connectHttpService(url);
 
         JSONObject jsonObject = getJsonObject(JsonString);
