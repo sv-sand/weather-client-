@@ -1,9 +1,6 @@
 package data;
 
 import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
-
 import java.util.Date;
 
 
@@ -53,22 +50,7 @@ public class WeatherToday {
 
     // Parsing
 
-    public void parse(String JsonString) {
-        JSONObject jsonRoot = getJsonObject(JsonString);
-
-        if(jsonRoot==null)
-            return;
-
-        String resultCode = jsonRoot.get("cod").toString();
-        switch(resultCode) {
-            case "200":
-                // OK
-                break;
-            case "404":
-                System.out.print(jsonRoot.get("message").toString());
-                return;
-        }
-
+    public void loadJson(JSONObject jsonRoot) {
         timeZone = ((long) jsonRoot.get("timezone")) / 3600;
         visibility = (long) jsonRoot.get("visibility");
         cityName = (String) jsonRoot.get("name");
@@ -99,37 +81,6 @@ public class WeatherToday {
         windGust = (double) jsonWind.get("gust");
 
         isEmpty = false;
-    }
-
-    public boolean isCityAvailable(String JsonString) {
-        JSONObject jsonRoot = getJsonObject(JsonString);
-
-        if(jsonRoot==null)
-            return false;
-
-        String resultCode = jsonRoot.get("cod").toString();
-        if(resultCode.equals("200"))
-            return true;
-        else {
-            System.out.print(jsonRoot.get("message").toString());
-        }
-        return false;
-    }
-
-    private JSONObject getJsonObject(String JsonString) {
-        JSONParser parser = new JSONParser();
-        JSONObject object = null;
-
-        if(JsonString.isEmpty())
-            return object;
-
-        try {
-            object = (JSONObject) parser.parse(JsonString);
-        } catch (ParseException e) {
-            System.out.println(e.getLocalizedMessage());
-            return object;
-        }
-        return object;
     }
 
     // Service methods

@@ -6,9 +6,33 @@
 public class Application {
     public static void main(String[] args) {
         WeatherClient client = new WeatherClient();
-        client.setLanguage("ru");
-        client.setCity("Moscow");
-        client.loadWeatherToday();
-        client.printWeatherToday();
+
+        try {
+            client.setLanguage("ru");
+        } catch (WeatherException e) {
+            System.out.println(e.getLocalizedMessage());
+            return;
+        }
+
+        try {
+            client.setCity("Moscow");
+        } catch (WeatherException e) {
+            System.out.println(e.getLocalizedMessage());
+            return;
+        }
+
+        try {
+            client.loadWeatherToday();
+        } catch (WeatherException e) {
+            System.out.println(e.getLocalizedMessage());
+            return;
+        }
+
+        System.out.println(client.getTextHeader());
+        System.out.println(client.getTextCity());
+        System.out.println(client.getTextTemp());
+        System.out.println(client.getTextVisibility());
+        System.out.println(client.getTextPressure());
+        System.out.println(client.getTextWindSpeed());
     }
 }

@@ -1,9 +1,6 @@
 package lang;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.ListResourceBundle;
-import java.util.Map;
 
 /**
  * @author Sand, sve.snd@gmail.com, http://sanddev.ru
@@ -14,15 +11,22 @@ public class en_EN extends ListResourceBundle {
     @Override
     protected Object[][] getContents() {
         return  new Object[][] {
-                {"ThereIsWeatherToday", "There is weather today (%s)\n"},
-                {"City", "City: %s\n"},
-                {"Temperature", "Temperature: %.0f\u2103-%.0f\u2103\n"},
-                {"Visibility", "Visibility: %s m\n"},
-                {"Pressure", "Pressure: %s\n"},
-                {"WindSpeed", "Wind speed: %.1f km/h\n"},
-                {"Error", "Error: %s\n"},
-                {"ErrorLangCode", "Error: wrong language code %s\n"},
-                {"ErrorNoData", "Error: there is no data.\n"}
+
+                // Interface
+                {"ThereIsWeatherToday", "There is weather today (%s)"},
+                {"City", "City: %s"},
+                {"Temperature", "Temperature: %.0f\u2103-%.0f\u2103"},
+                {"Visibility", "Visibility: %s m"},
+                {"Pressure", "Pressure: %s"},
+                {"WindSpeed", "Wind speed: %.1f km/h"},
+
+                // Errors
+                {"Error", "Error: %s"},
+                {"ErrorLangCode", "Error: wrong language code %s"},
+                {"ErrorJsonParsing", "Error: can't parse JSON message: %s"},
+                {"ErrorJsonParsingEmptyMsg", "Error: empty JSON message"},
+                {"ErrorHttp", "Error: HTTP response code %s: %s"},
+                {"ErrorNoData", "Error: there is no data."}
         };
     }
 }

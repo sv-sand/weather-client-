@@ -11,15 +11,22 @@ public class ru_RU extends ListResourceBundle {
     @Override
     protected Object[][] getContents() {
         return  new Object[][] {
-                {"ThereIsWeatherToday", "Погода на сегодня (%s)\n"},
-                {"City", "Город: %s\n"},
-                {"Temperature", "Температура: %.0f\u2103-%.0f\u2103\n"},
-                {"Visibility", "Видимость: %s м\n"},
-                {"Pressure", "Давление: %s\n"},
-                {"WindSpeed", "Скорость ветра: %.1f км/ч\n"},
-                {"Error", "Ошибка: %s\n"},
-                {"ErrorLangCode", "Ошибка: не правильный код языка %s\n"},
-                {"ErrorNoData", "Ошибка: нет данных.\n"}
+
+                // Interface
+                {"ThereIsWeatherToday", "Погода на сегодня (%s)"},
+                {"City", "Город: %s"},
+                {"Temperature", "Температура: %.0f\u2103-%.0f\u2103"},
+                {"Visibility", "Видимость: %s м"},
+                {"Pressure", "Давление: %s"},
+                {"WindSpeed", "Скорость ветра: %.1f км/ч"},
+
+                // Errors
+                {"Error", "Ошибка: %s"},
+                {"ErrorLangCode", "Ошибка: не правильный код языка %s"},
+                {"ErrorJsonParsing", "Ошибка: не удалось разобрать JSON сообщение: %s"},
+                {"ErrorJsonParsingEmptyMsg", "Ошибка: пустое JSON сообщение"},
+                {"ErrorHttp", "Ошибка: HTTP код ответа %s: %s"},
+                {"ErrorNoData", "Ошибка: нет данных."}
         };
     }
 }
