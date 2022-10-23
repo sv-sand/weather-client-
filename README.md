@@ -1,2 +1,2 @@
 # The Weather client
-Testing program for download weather data
+Interactive testing program for download weather data
