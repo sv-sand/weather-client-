@@ -17,15 +17,15 @@ public class Application {
         WeatherClient client = new WeatherClient(weatherConfig.getProperty("apiId"));
 
         System.out.println("Welcome to Weather client program!");
-        System.out.println("For help just type 'help', or 'exit' if you want to close program");
+        System.out.println("For help just type '?', or 'exit' if you want to close program");
 
         String command;
         Scanner scanner = new Scanner(System.in);
         do{
-            System.out.println("Input next command:");
+            System.out.print(">");
             command = scanner.nextLine();
             switch(command.toLowerCase(Locale.ROOT)){
-                case "help" -> {
+                case "?", "help" -> {
                     System.out.println("There is allowed commands:");
                     System.out.println("help - show this dialog");
                     System.out.println("lang - if you want  to set another language");
@@ -33,18 +33,21 @@ public class Application {
                     System.out.println("load - command load and print weather today");
                 }
                 case "lang" -> {
-                    System.out.println("Input next language code (en, ru):");
+                    System.out.print("Type language code (en, ru):");
                     var langCode = scanner.nextLine();
                     setLanguage(client, langCode);
                 }
                 case "city" -> {
-                    System.out.println("Input city name:");
+                    System.out.print("Type city name:");
                     var cityName = scanner.nextLine();
                     setCity(client, cityName);
                 }
                 case "load" -> {
                     loadWeather(client);
                     System.out.println(client.getTextWeatherToday());
+                }
+                default -> {
+                    System.out.println("Undefined command");
                 }
             }
 
