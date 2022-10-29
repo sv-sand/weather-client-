@@ -15,7 +15,7 @@ public class WeatherClientTest {
 
     @Before
     public void newWeatherClient(){
-        Properties weatherConfig = Application.getWeatherConfig();
+        Properties weatherConfig = Application.getConfig();
         if(weatherConfig==null)
             return;
 
@@ -115,7 +115,7 @@ public class WeatherClientTest {
         }
 
         try {
-            client.setCityAndCheck("Moscow");
+            client.setCityAndCheck("Москва");
         } catch (WeatherException e) {
             Assert.fail(e.getLocalizedMessage());
         }
