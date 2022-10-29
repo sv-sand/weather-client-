@@ -1,6 +1,7 @@
 import java.io.*;
 import java.util.Locale;
 import java.util.Properties;
+import java.util.ResourceBundle;
 import java.util.Scanner;
 
 /**
@@ -9,57 +10,59 @@ import java.util.Scanner;
  */
 
 public class Application {
+    private static Locale locale;
+    private static ResourceBundle res;
+
     public static void main(String[] args) {
-        Properties weatherConfig = getWeatherConfig();
-        if(weatherConfig==null)
-            return;
+        locale = Locale.getDefault();
+        res = ResourceBundle.getBundle("app");
+        Properties config = getConfig();
 
-        WeatherClient client = new WeatherClient(weatherConfig.getProperty("apiId"));
+        var apiId = config.getProperty("apiId");
+        WeatherClient client = new WeatherClient(apiId);
 
-        System.out.println("Welcome to Weather client program!");
-        System.out.println("For help just type '?', or 'exit' if you want to close program");
+        System.out.println(res.getString("welcome"));
+        System.out.println(res.getString("header"));
 
         String command;
         Scanner scanner = new Scanner(System.in);
         do{
             System.out.print(">");
-            command = scanner.nextLine();
-            switch(command.toLowerCase(Locale.ROOT)){
-                case "?", "help" -> {
-                    System.out.println("There is allowed commands:");
-                    System.out.println("help - show this dialog");
-                    System.out.println("lang - if you want  to set another language");
-                    System.out.println("city - if you want to set another city");
-                    System.out.println("load - command load and print weather today");
-                }
-                case "lang" -> {
-                    System.out.print("Type language code (en, ru):");
-                    var langCode = scanner.nextLine();
-                    setLanguage(client, langCode);
-                }
-                case "city" -> {
-                    System.out.print("Type city name:");
-                    var cityName = scanner.nextLine();
-                    setCity(client, cityName);
-                }
-                case "load" -> {
-                    loadWeather(client);
-                    System.out.println(client.getTextWeatherToday());
-                }
-                default -> {
-                    System.out.println("Undefined command");
-                }
-            }
+            command = scanner.nextLine()
+                    .toLowerCase(Locale.ROOT);
 
+            if(command.equals(res.getString("help")) | command.equals("?")) {
+                System.out.println(res.getString("allowed_commands"));
+            }
+            else if(command.equals(res.getString("exit"))) {
+                break;
+            }
+            else if(command.equals(res.getString("lang"))) {
+                System.out.print(res.getString("type_lang_code"));
+                var langCode = scanner.nextLine();
+                setLanguage(client, langCode);
+            }
+            else if(command.equals(res.getString("city"))) {
+                System.out.print(res.getString("type_city_name"));
+                var cityName = scanner.nextLine();
+                setCity(client, cityName);
+            }
+            else if(command.equals(res.getString("load"))) {
+                loadWeather(client);
+                System.out.println(client.getTextWeatherToday());
+            }
+            else {
+                System.out.println(res.getString("undefined_command"));
+            }
         } while(!command.equals("exit"));
 
-        System.out.println("Bye!");
+        System.out.println(res.getString("bye"));
     }
 
-    public static Properties getWeatherConfig() {
+    public static Properties getConfig() {
         Properties prop = new Properties();
 
-        try (InputStream stream = new FileInputStream("config/weather-api.properties")) {
+        try (InputStream stream = new FileInputStream("config/app.properties")) {
             prop.load(stream);
         } catch (IOException e) {
             e.printStackTrace();
@@ -69,6 +72,25 @@ public class Application {
     }
 
     private static void setLanguage(WeatherClient client, String langCode) {
+        var country = "";
+        var currentLangCode = locale.getLanguage();
+
+        if (currentLangCode.equals(langCode))
+            return;
+
+        switch (langCode) {
+            case "en" ->
+                country = "EN";
+            case "ru" ->
+                country = "RU";
+            default -> {
+                var msg = res.getString("error_lang_code");
+                System.out.printf(msg+"\n", langCode);
+            }
+        }
+        locale = new Locale(langCode, country);
+        res = ResourceBundle.getBundle("app", locale);
+
         try {
             client.setLanguage(langCode);
         } catch (WeatherException e) {

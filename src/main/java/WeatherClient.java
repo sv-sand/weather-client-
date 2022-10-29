@@ -25,11 +25,8 @@ public class WeatherClient {
 
     private DefaultHttpClient client;
 
-    private String lang;
-    private String country;
-    private String baseName;
     private Locale locale;
-    private ResourceBundle langResource;
+    private ResourceBundle res;
 
     private WeatherToday weatherToday;
     private String cityName;
@@ -38,17 +35,15 @@ public class WeatherClient {
         this.apiId = apiId;
 
         // Init default language
-        lang = "en";
-        country = "EN";
-        baseName = "lang.en_EN";
-        initLocale();
+        locale = Locale.getDefault();
+        res = ResourceBundle.getBundle("weather");
 
         weatherToday = new WeatherToday();
         initHttpClient();
     }
 
     public WeatherToday loadWeatherToday() throws WeatherException {
-        String url = URL + "/weather?q="+cityName+"&appid="+ apiId +"&lang="+lang;
+        String url = URL + "/weather?q="+cityName+"&appid="+ apiId +"&lang="+locale.getLanguage();
         String JsonString = connectHttpService(url);
 
         JSONObject jsonObject = getJsonObject(JsonString);
@@ -62,11 +57,6 @@ public class WeatherClient {
         weatherToday.loadJson(jsonObject);
 
         return weatherToday;
-    }
-
-    private void initLocale() {
-        locale = new Locale(lang, country);
-        langResource = ResourceBundle.getBundle(baseName, locale);
     }
 
     // HTTP client
@@ -121,26 +111,26 @@ public class WeatherClient {
 
     // Exceptions
     private WeatherException getExceptionLangCode(String langCode){
-        var errMsg = langResource.getString("ErrorLangCode");
+        var errMsg = res.getString("ErrorLangCode");
 
         return new WeatherException(
                 String.format(errMsg, langCode)
         );
     }
     private WeatherException getExceptionJsonParsing(String msg){
-        var errMsg = langResource.getString("ErrorJsonParsingEmptyMsg");
+        var errMsg = res.getString("ErrorJsonParsingEmptyMsg");
 
         return new WeatherException(
                 String.format(errMsg, msg)
         );
     }
     private WeatherException getExceptionJsonParsingEmptyMsg(){
-        var errMsg = langResource.getString("ErrorJsonParsingEmptyMsg");
+        var errMsg = res.getString("ErrorJsonParsingEmptyMsg");
 
         return new WeatherException(errMsg);
     }
     private WeatherException getExceptionHttp(String responseCode, String msg){
-        var errMsg = langResource.getString("ErrorHttp");
+        var errMsg = res.getString("ErrorHttp");
 
         return new WeatherException(
                 String.format(errMsg, responseCode, msg)
@@ -157,23 +147,23 @@ public class WeatherClient {
         DateFormat df = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, locale);
 
         result = String.format(
-                langResource.getString("ThereIsWeatherToday"),
+                res.getString("ThereIsWeatherToday"),
                 df.format(weatherToday.getDate())
         ) + "\n" + String.format(
-                langResource.getString("City"),
+                res.getString("City"),
                 weatherToday.getCity()
         ) + "\n" + String.format(
-                langResource.getString("Temperature"),
+                res.getString("Temperature"),
                 weatherToday.getTempMin(),
                 weatherToday.getTempMax()
         ) + "\n" + String.format(
-                langResource.getString("Visibility"),
+                res.getString("Visibility"),
                 weatherToday.getVisibilityDistance()
         ) + "\n" + String.format(
-                langResource.getString("Pressure"),
+                res.getString("Pressure"),
                 weatherToday.getPressure()
         ) + "\n" + String.format(
-                langResource.getString("WindSpeed"),
+                res.getString("WindSpeed"),
                 weatherToday.getWindSpeed()
         );
         return result;
@@ -191,7 +181,7 @@ public class WeatherClient {
         this.cityName = cityName;
     }
     public void setCityAndCheck(String cityName) throws WeatherException {
-        String url = URL + "/weather?q="+cityName+"&appid="+ apiId +"&lang="+lang;
+        String url = URL + "/weather?q="+cityName+"&appid="+ apiId +"&lang="+locale.getLanguage();
         String JsonString = connectHttpService(url);
 
         JSONObject jsonObject = getJsonObject(JsonString);
@@ -204,28 +194,25 @@ public class WeatherClient {
 
         this.cityName = cityName;
     }
-    public String getLanguage() {
-        return lang;
-    }
     public void setLanguage(String langCode) throws WeatherException {
+        var country = "";
+        var currentLangCode = locale.getLanguage();
 
-        if (langCode.equals(lang))
+        if (currentLangCode.equals(langCode))
             return;
 
         switch (langCode) {
-            case "en" -> {
-                lang = "en";
+            case "en" ->
                 country = "EN";
-                baseName = "lang.en_EN";
-            }
-            case "ru" -> {
-                lang = "ru";
+            case "ru" ->
                 country = "RU";
-                baseName = "lang.ru_RU";
-            }
             default ->
                 throw getExceptionLangCode(langCode);
         }
-        initLocale();
+        locale = new Locale(langCode, country);
+        res = ResourceBundle.getBundle("weather", locale);
+    }
+    public String getLanguage() {
+        return locale.getLanguage();
     }
 }
