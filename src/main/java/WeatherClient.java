@@ -202,11 +202,13 @@ public class WeatherClient {
             return;
 
         switch (langCode) {
-            case "en" ->
+            case "en":
                 country = "EN";
-            case "ru" ->
+                break;
+            case "ru":
                 country = "RU";
-            default ->
+                break;
+            default:
                 throw getExceptionLangCode(langCode);
         }
         locale = new Locale(langCode, country);

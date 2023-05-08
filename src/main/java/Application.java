@@ -5,7 +5,7 @@ import java.util.ResourceBundle;
 import java.util.Scanner;
 
 /**
- * @author Sand, sve.snd@gmail.com, http://sanddev.ru
+ * @author Sand, sve.snd@gmail.com, <a href="http://sanddev.ru">http://sanddev.ru</a>
  * @since 16.05.2022
  */
 
@@ -77,17 +77,15 @@ public class Application {
 
         if (currentLangCode.equals(langCode))
             return;
-
-        switch (langCode) {
-            case "en" ->
-                country = "EN";
-            case "ru" ->
-                country = "RU";
-            default -> {
-                var msg = res.getString("error_lang_code");
-                System.out.printf(msg+"\n", langCode);
-            }
+        else if (currentLangCode.equals("en"))
+            country = "EN";
+        else if (currentLangCode.equals("ru"))
+            country = "RU";
+        else {
+            var msg = res.getString("error_lang_code");
+            System.out.printf(msg+"\n", langCode);
         }
+
         locale = new Locale(langCode, country);
         res = ResourceBundle.getBundle("app", locale);
 
