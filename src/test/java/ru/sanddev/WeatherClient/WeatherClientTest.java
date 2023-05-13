@@ -16,13 +16,15 @@ import java.util.Properties;
  */
 
 public class WeatherClientTest {
+    private static final String CONFIG_FILE = "config/app.properties";
+
     WeatherClient client;
 
     @Before
     public void init(){
         Properties config = new Properties();
 
-        try (InputStream stream = new FileInputStream("config/config.properties")) {
+        try (InputStream stream = new FileInputStream(CONFIG_FILE)) {
             config.load(stream);
         } catch (IOException e) {
             Assert.fail("Attention! Can't find config file. Please make file ./config/config.properties according instruction by this program!");

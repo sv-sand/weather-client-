@@ -17,6 +17,8 @@ import java.util.Scanner;
 
 @Log4j
 public class WeatherConsoleApp {
+    private static final String CONFIG_FILE = "config/app.properties";
+
     private static Locale locale;
     private static ResourceBundle res;
     private static Properties config;
@@ -50,7 +52,7 @@ public class WeatherConsoleApp {
 
         Properties prop = new Properties();
 
-        try (InputStream stream = new FileInputStream("config/config.properties")) {
+        try (InputStream stream = new FileInputStream(CONFIG_FILE)) {
             prop.load(stream);
         } catch (IOException e) {
             String msg = "Attention! Can't find config file. Please make file ./config/config.properties according instruction by this program!";
