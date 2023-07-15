@@ -2,7 +2,6 @@ package ru.sanddev.WeatherClient.objects;
 
 import lombok.Data;
 import lombok.extern.log4j.Log4j;
-import ru.sanddev.WeatherClient.WeatherClient;
 import ru.sanddev.WeatherClient.objects.nested.City;
 import ru.sanddev.WeatherClient.objects.nested.DailyForecastListPosition;
 
@@ -16,36 +15,29 @@ import java.util.Set;
 
 @Log4j
 @Data
-public class WeatherDailyForecast {
-
-    private WeatherClient client;
+public class WeatherDailyForecast implements WeatherData{
 
     private City city;
-    private Set<DailyForecastListPosition> list;
 
-    // Methods
+    private Set<DailyForecastListPosition> list;
 
     public WeatherDailyForecast() {
         list = new HashSet<>();
     }
 
+    // Methods
+
+    @Override
+    public boolean isEmpty() {
+        return list.isEmpty();
+    }
+
+    @Override
     public void convertTemperatureUnits(TemperatureUnits targetTempUnits) {
         for (var item: list) {
             log.debug("Prepare temperature conversion by " + item.getDate());
             item.getTemp().convertTemperature(targetTempUnits);
             item.getFeelsLike().convertTemperature(targetTempUnits);
         }
-    }
-
-    public boolean isEmpty() {
-        return list.isEmpty();
-    }
-
-    public String toString() {
-        if(client == null)
-            return "";
-
-        return client.getWeatherDailyForecastPresentation(this);
-
     }
 }

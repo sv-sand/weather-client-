@@ -1,8 +1,11 @@
-package ru.sanddev.WeatherConsoleApp;
+package ru.sanddev;
 
 import lombok.extern.log4j.Log4j;
 import ru.sanddev.WeatherClient.WeatherClient;
-import ru.sanddev.WeatherClient.WeatherException;
+import ru.sanddev.WeatherClient.Exception.WeatherException;
+import ru.sanddev.WeatherClient.objects.WeatherDailyForecast;
+import ru.sanddev.WeatherClient.objects.WeatherHourForecast;
+import ru.sanddev.WeatherClient.objects.WeatherToday;
 
 import java.io.*;
 import java.util.Locale;
@@ -17,8 +20,12 @@ import java.util.Scanner;
 
 @Log4j
 public class WeatherConsoleApp {
+
+    private static final Locale DEFAULT_LOCALE = Locale.ENGLISH;
+    private static final String CONFIG_FILE = "config/app.properties";
+
     private static Locale locale;
-    private static ResourceBundle res;
+    private static ResourceBundle dialogs;
     private static Properties config;
 
     private static WeatherClient client;
@@ -36,8 +43,8 @@ public class WeatherConsoleApp {
     private static void init() {
         log.debug("Initialization start");
 
-        locale = Locale.getDefault();
-        res = ResourceBundle.getBundle("app");
+        locale = DEFAULT_LOCALE;
+        dialogs = ResourceBundle.getBundle("app");
         config = getConfig();
 
         client = new WeatherClient(config.getProperty("apiId"));
@@ -50,12 +57,11 @@ public class WeatherConsoleApp {
 
         Properties prop = new Properties();
 
-        try (InputStream stream = new FileInputStream("config/config.properties")) {
+        try (InputStream stream = new FileInputStream(CONFIG_FILE)) {
             prop.load(stream);
         } catch (IOException e) {
-            String msg = "Attention! Can't find config file. Please make file ./config/config.properties according instruction by this program!";
-            System.out.println(msg);
-            log.error(msg, e);
+            log.error("Can't find config file: " + CONFIG_FILE, e);
+            System.out.println("Attention! Can't find config file. Please make file ./config/config.properties according instruction by this program!");
             return prop;
         }
 
@@ -66,8 +72,8 @@ public class WeatherConsoleApp {
     private static void startUserInterface() {
         log.debug("User interface started");
 
-        System.out.println(res.getString("welcome"));
-        System.out.println(res.getString("header"));
+        System.out.println(dialogs.getString("welcome"));
+        System.out.println(dialogs.getString("header"));
 
         String command;
         Scanner scanner = new Scanner(System.in);
@@ -79,57 +85,57 @@ public class WeatherConsoleApp {
 
             log.debug("User typed the command: " + command);
 
-            if(command.equals(res.getString("help")) | command.equals("?")) {
+            if(command.equals(dialogs.getString("help")) | command.equals("?")) {
                 log.debug("HELP command was recognised");
-                System.out.println(res.getString("allowed_commands"));
+                System.out.println(dialogs.getString("allowed_commands"));
             }
-            else if(command.equals(res.getString("exit"))) {
+            else if(command.equals(dialogs.getString("exit"))) {
                 log.debug("EXIT command was recognised");
                 break;
             }
-            else if(command.equals(res.getString("lang"))) {
+            else if(command.equals(dialogs.getString("lang"))) {
                 log.debug("LANG command was recognised");
-                System.out.print(res.getString("type_lang_code"));
+                System.out.print(dialogs.getString("type_lang_code"));
 
                 var langCode = scanner.nextLine();
                 log.debug("User typed the language code: "+langCode);
                 setLanguage(langCode);
             }
-            else if(command.equals(res.getString("city"))) {
+            else if(command.equals(dialogs.getString("city"))) {
                 log.debug("CITY command was recognised");
-                System.out.print(res.getString("type_city_name"));
+                System.out.print(dialogs.getString("type_city_name"));
                 var cityName = scanner.nextLine();
                 client.setCity(cityName);
             }
-            else if(command.equals(res.getString("weather"))) {
+            else if(command.equals(dialogs.getString("weather"))) {
                 log.debug("WEATHER command was recognised");
                 loadWeatherToday();
             }
-            else if(command.equals(res.getString("forecast"))) {
+            else if(command.equals(dialogs.getString("forecast"))) {
                 log.debug("FORECAST command was recognised");
 
-                System.out.print(res.getString("type_kind_forecast"));
+                System.out.print(dialogs.getString("type_kind_forecast"));
                 var forecast_type = scanner.nextLine();
 
-                if (forecast_type.equals(res.getString("hour"))) {
+                if (forecast_type.equals(dialogs.getString("hour"))) {
                     log.debug("HOUR command was recognised");
                     loadWeatherHourForecast();
-                }else if (forecast_type.equals(res.getString("day"))) {
+                }else if (forecast_type.equals(dialogs.getString("day"))) {
                     log.debug("DAY command was recognised");
                     loadWeatherDailyForecast();
                 }
                 else {
                     log.warn("Can't recognise command: " + forecast_type);
-                    System.out.println(res.getString("undefined_command"));
+                    System.out.println(dialogs.getString("undefined_command"));
                 }
             }
             else {
                 log.warn("Can't recognise command: " + command);
-                System.out.println(res.getString("undefined_command"));
+                System.out.println(dialogs.getString("undefined_command"));
             }
         } while(!command.equals("exit"));
 
-        System.out.println(res.getString("bye"));
+        System.out.println(dialogs.getString("bye"));
 
         log.debug("User interface stopped");
     }
@@ -137,65 +143,69 @@ public class WeatherConsoleApp {
     private static void setLanguage(String langCode) {
         log.debug("Setting language was started");
 
-        var country = "";
-        var currentLangCode = locale.getLanguage();
-
-        log.debug(String.format("Current language code %s, target code %s", currentLangCode, langCode));
-
-        if (currentLangCode.equals(langCode)) {
-            log.debug("Do not need change language");
-            return;
-        }
-
         // Set language to this console app
         switch (langCode) {
             case "en":
-                country = "EN";
+                locale = new Locale(langCode, "EN");
                 break;
             case "ru":
-                country = "RU";
+                locale = new Locale(langCode, "RU");
                 break;
             default:
-                var msg = res.getString("error_lang_code");
-                System.out.printf(msg+"\n", langCode);
+                log.error(String.format("Language with code %s not supported", langCode));
+                System.out.printf(dialogs.getString("error_lang_code") + "\n", langCode);
         }
-        locale = new Locale(langCode, country);
-        res = ResourceBundle.getBundle("app", locale);
+
+        dialogs = ResourceBundle.getBundle("dialogs", locale);
 
         // Set language to weather client
         try {
-            client.setLanguage(langCode);
+            client.setLocale(locale);
         } catch (WeatherException e) {
+            log.error("Failed change language to weather client", e);
             System.out.println(e.getLocalizedMessage());
         }
-
         log.debug("Language was changed");
     }
 
     private static void loadWeatherToday() {
+        WeatherToday weather;
+
         try {
-            var weather = client.loadWeatherToday();
-            System.out.println(weather.toString());
+            weather = client.loadWeatherToday();
         } catch (WeatherException e) {
+            log.error("Failed load weather today", e);
             System.out.println(e.getLocalizedMessage());
+            return;
         }
+
+        System.out.println(WeatherComposer.composeWeatherToday(client, weather, locale));
     }
 
     private static void loadWeatherHourForecast() {
+        WeatherHourForecast weather;
+
         try {
-            var weather = client.loadWeatherHourForecast();
-            System.out.println(weather.toString());
+            weather = client.loadWeatherHourForecast();
         } catch (WeatherException e) {
+            log.error("Failed load weather hour forecast", e);
             System.out.println(e.getLocalizedMessage());
+            return;
         }
+
+        System.out.println(WeatherComposer.composeWeatherHourlyForecast(client, weather, locale));
     }
 
     private static void loadWeatherDailyForecast() {
+        WeatherDailyForecast weather;
+
         try {
-            var weather = client.loadWeatherDailyForecast();
-            System.out.println(weather.toString());
+            weather = client.loadWeatherDailyForecast();
         } catch (WeatherException e) {
+            log.error("Failed load weather daily forecast", e);
             System.out.println(e.getLocalizedMessage());
+            return;
         }
+        System.out.println(WeatherComposer.composeWeatherDailyForecast(client, weather, locale));
     }
 }

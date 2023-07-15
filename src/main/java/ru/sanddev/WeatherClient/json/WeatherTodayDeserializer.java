@@ -21,18 +21,16 @@ public class WeatherTodayDeserializer implements JsonDeserializer<WeatherToday> 
         var dt = jsonObject.get("dt").getAsLong();
         weather.setDate(new Date(dt * 1000 ));
 
-        weather.setTimezone(
-                jsonObject.get("timezone").getAsLong() / 3600
+        City city = new City();
+        city.setName(jsonObject.get("name").getAsString());
+        city.setTimezone(jsonObject.get("timezone").getAsLong() / 3600);
+        city.setCoord(
+                jsonDeserializationContext.deserialize(jsonObject.get("coord"), Coordinates.class)
         );
-
-        weather.setCity(jsonObject.get("name").getAsString());
+        weather.setCity(city);
 
         weather.setSys(
                 jsonDeserializationContext.deserialize(jsonObject.get("sys"), SystemData.class)
-        );
-
-        weather.setCoord(
-                jsonDeserializationContext.deserialize(jsonObject.get("coord"), Coordinates.class)
         );
 
         for (JsonElement obj: jsonObject.get("weather").getAsJsonArray())

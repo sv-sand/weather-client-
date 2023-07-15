@@ -11,6 +11,8 @@ import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
+import ru.sanddev.WeatherClient.Exception.WeatherException;
+import ru.sanddev.WeatherClient.Exception.WeatherExceptionHelper;
 import ru.sanddev.WeatherClient.json.DailyForecastListPositionDeserializer;
 import ru.sanddev.WeatherClient.json.HourForecastListPositionDeserializer;
 import ru.sanddev.WeatherClient.json.WeatherHourForecastDeserializer;
@@ -22,9 +24,7 @@ import ru.sanddev.WeatherClient.objects.nested.HourForecastListPosition;
 import ru.sanddev.WeatherClient.objects.nested.SystemData;
 
 import java.io.IOException;
-import java.text.DateFormat;
 import java.util.Locale;
-import java.util.ResourceBundle;
 
 /**
  * @author Alexander Svetlakov <sve.snd@gmail.com>
@@ -33,11 +33,10 @@ import java.util.ResourceBundle;
 
 @Log4j
 public class WeatherClient {
-    public final TemperatureUnits DEFAULT_TEMPERATURE_UNITS = TemperatureUnits.CELSIUS;
-    public final Locale DEFAULT_LOCALE = Locale.ENGLISH;
 
-    @Getter
-    private final static String URL = "https://api.openweathermap.org/data/2.5";
+    public final static TemperatureUnits DEFAULT_TEMPERATURE_UNITS = TemperatureUnits.CELSIUS;
+    public final static String URL = "https://api.openweathermap.org/data/2.5";
+    public final static Locale DEFAULT_LOCALE = Locale.ENGLISH;
 
     @Getter @Setter
     private String apiId;
@@ -48,12 +47,13 @@ public class WeatherClient {
     @Getter @Setter
     private TemperatureUnits tempUnits;
 
+    @Getter
     private Locale locale;
-    private ResourceBundle dialogBundle;
-    private ResourceBundle exceptionBundle;
+
+    private WeatherExceptionHelper exceptionHelper;
     private DefaultHttpClient client;
 
-    // Methods
+    // Constructors
 
     public WeatherClient() {
         this.tempUnits = DEFAULT_TEMPERATURE_UNITS;
@@ -80,12 +80,13 @@ public class WeatherClient {
         init();
     }
 
+    // Methods
+
     private void init() {
-        log.debug("Weather client initialization begin");
+        log.debug("Weather client initialization");
 
         locale = DEFAULT_LOCALE;
-        dialogBundle = ResourceBundle.getBundle("weather");
-        exceptionBundle = ResourceBundle.getBundle("weather-exceptions");
+        exceptionHelper = new WeatherExceptionHelper(locale);
 
         initHttpClient();
     }
@@ -106,8 +107,7 @@ public class WeatherClient {
                 .create();
 
         WeatherToday weather = gson.fromJson(jsonString, WeatherToday.class);
-        weather.setClient(this);
-        weather.getMain().convertTemperature(tempUnits);
+        weather.convertTemperatureUnits(tempUnits);
 
         return weather;
     }
@@ -139,7 +139,6 @@ public class WeatherClient {
                 .create();
 
         WeatherHourForecast weather = gson.fromJson(jsonString, WeatherHourForecast.class);
-        weather.setClient(this);
         weather.convertTemperatureUnits(tempUnits);
 
         return weather;
@@ -171,21 +170,9 @@ public class WeatherClient {
                 .create();
 
         WeatherDailyForecast weather = gson.fromJson(jsonString, WeatherDailyForecast.class);
-        weather.setClient(this);
         weather.convertTemperatureUnits(tempUnits);
 
         return weather;
-    }
-
-    private void checkHttpRequestResult(String jsonString) throws WeatherException {
-        log.debug("Request result checking");
-
-        Gson gson = new Gson();
-        HttpRequestResult result = gson.fromJson(jsonString, HttpRequestResult.class);
-
-        if (result.getCod() != 200) {
-            raiseExceptionHttp(result.getCod(), result.getMessage());
-        }
     }
 
     // HTTP client
@@ -212,7 +199,7 @@ public class WeatherClient {
         try {
             response = client.execute(request);
         } catch (IOException e) {
-            raiseExceptionConnection(e, e.getLocalizedMessage());
+            exceptionHelper.raiseExceptionConnection(e, e.getLocalizedMessage());
             return result;
         }
 
@@ -221,228 +208,53 @@ public class WeatherClient {
         try {
             result = EntityUtils.toString(response.getEntity(), "UTF-8");
         } catch (IOException e) {
-            raiseExceptionConnection(e, e.getLocalizedMessage());
+            exceptionHelper.raiseExceptionConnection(e, e.getLocalizedMessage());
         }
 
         log.debug("HTTP response was retrieved");
         return result;
     }
 
-    // Exceptions
+    private void checkHttpRequestResult(String jsonString) throws WeatherException {
+        log.debug("Request result checking");
 
-    private void raiseExceptionLangCode(String langCode) throws WeatherException {
-        String msg = exceptionBundle.getString("ErrorLangCode");
+        Gson gson = new Gson();
+        HttpRequestResult result = gson.fromJson(jsonString, HttpRequestResult.class);
 
-        WeatherException exception =  new WeatherException(
-                String.format(msg, langCode)
-        );
-        log.error(exception.getLocalizedMessage(), exception);
-
-        throw exception;
-    }
-
-    private void raiseExceptionHttp(Integer responseCode, String description) throws WeatherException {
-        String msg = exceptionBundle.getString("ErrorHttp");
-
-        WeatherException exception = new WeatherException(
-                String.format(msg, responseCode, description)
-        );
-        log.error(exception.getLocalizedMessage(), exception);
-
-        throw exception;
-    }
-
-    private void raiseExceptionConnection(Throwable cause, String description) throws WeatherException {
-        String msg = exceptionBundle.getString("ErrorHttpConnection");
-
-        WeatherException exception =  new WeatherException(
-                String.format(msg, description),
-                cause
-        );
-        log.error(exception.getLocalizedMessage(), exception);
-
-        throw exception;
-    }
-
-    // Weather representation
-
-    /**
-     * Return current weather string representation
-     * @param weather weather data, obtained by the loadWeatherToday() method
-     */
-    public String getWeatherTodayPresentation(WeatherToday weather) {
-        log.debug("Getting weather today representation begin");
-
-        final String lineBreak = "\n";
-        StringBuilder result = new StringBuilder();
-        DateFormat df = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, locale);
-
-        if (weather.isEmpty())
-            return result.toString();
-
-        result.append(
-                String.format(dialogBundle.getString("there_is_weather_today"), df.format(weather.getDate()))
-        );
-        result.append(lineBreak);
-
-        result.append(
-                String.format(dialogBundle.getString("city"), weather.getCity())
-        );
-        result.append(lineBreak);
-
-        result.append(
-                String.format(dialogBundle.getString("temperature"), weather.getMain().getTempMin(), weather.getMain().getTempMax())
-        );
-        result.append(lineBreak);
-
-        result.append(
-                String.format(dialogBundle.getString("visibility"), weather.getVisibility())
-        );
-        result.append(lineBreak);
-
-        result.append(
-                String.format(dialogBundle.getString("pressure"), weather.getMain().getPressure())
-        );
-        result.append(lineBreak);
-
-        result.append(
-                String.format(dialogBundle.getString("wind_speed"), weather.getWind().getSpeed())
-        );
-
-        log.debug("Weather today representation done");
-
-        return result.toString();
-    }
-
-    /**
-     * Return weather hourly forecast string representation
-     * @param weather weather data, obtained by the loadWeatherHourForecast() method
-     */
-    public String getWeatherHourlyForecastPresentation(WeatherHourForecast weather) {
-        log.debug("Getting weather hourly forecast today representation begin");
-
-        final String retreat = "  ";
-        final String lineBreak = "\n";
-        StringBuilder result = new StringBuilder();
-        DateFormat df = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, locale);
-
-        if (weather.isEmpty())
-            return result.toString();
-
-        result.append(
-                String.format(dialogBundle.getString("there_is_weather_hourly_forecast"), weather.getCity().getName())
-        );
-        for (var pos: weather.getList()) {
-            result.append(lineBreak + lineBreak);
-
-            result.append(
-                    String.format(dialogBundle.getString("date"), df.format(pos.getDate()))
-            );
-            result.append(lineBreak);
-
-            result.append(retreat);
-            result.append(
-                    String.format(dialogBundle.getString("temperature"), pos.getMain().getTempMin(), pos.getMain().getTempMax())
-            );
-            result.append(lineBreak);
-
-            result.append(retreat);
-            result.append(
-                    String.format(dialogBundle.getString("pressure"), pos.getMain().getPressure())
-            );
-            result.append(lineBreak);
-
-            result.append(retreat);
-            result.append(
-                    String.format(dialogBundle.getString("wind_speed"), pos.getWind().getSpeed())
-            );
+        if (result.getCod() != 200) {
+            exceptionHelper.raiseExceptionHttp(result.getCod(), result.getMessage());
         }
-
-        log.debug("Weather hourly forecast representation done");
-
-        return result.toString();
-    }
-
-    /**
-     * Return weather daily forecast string representation
-     * @param weather weather data, obtained by the loadWeatherDailyForecast() method
-     */
-    public String getWeatherDailyForecastPresentation(WeatherDailyForecast weather) {
-        log.debug("Getting daily forecast today representation begin");
-
-        final String retreat = "  ";
-        final String lineBreak = "\n";
-        StringBuilder result = new StringBuilder();
-        DateFormat df = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, locale);
-
-        if (weather.isEmpty())
-            return result.toString();
-
-        result.append(
-                String.format(dialogBundle.getString("there_is_weather_daily_forecast"), weather.getCity().getName())
-        );
-
-        for (var pos: weather.getList()) {
-            result.append(lineBreak + lineBreak);
-
-            result.append(
-                    String.format(dialogBundle.getString("date"), df.format(pos.getDate()))
-            );
-            result.append(lineBreak);
-
-            result.append(retreat);
-            result.append(
-                    String.format(dialogBundle.getString("temperature"), pos.getTemp().getMin(), pos.getTemp().getMax())
-            );
-            result.append(lineBreak);
-
-            result.append(retreat);
-            result.append(
-                    String.format(dialogBundle.getString("pressure"), pos.getPressure())
-            );
-            result.append(lineBreak);
-
-            result.append(retreat);
-            result.append(
-                    String.format(dialogBundle.getString("wind_speed"), pos.getWindSpeed())
-            );
-        }
-
-        log.debug("Weather daily forecast representation done");
-
-        return result.toString();
     }
 
     // Getters & setters
 
-    public String getLanguage() {
-        return locale.getLanguage();
-    }
+    public void setLocale(Locale newLocale) throws WeatherException {
+        log.debug(
+                String.format("Language change begin, current %s, target %s", locale.getLanguage(), newLocale.getLanguage())
+        );
 
-    public void setLanguage(String langCode) throws WeatherException {
-        var country = "";
-        var currentLangCode = locale.getLanguage();
-
-        log.debug(String.format("Language change begin, current %s, target %s", currentLangCode, langCode));
-
-        if (currentLangCode.equals(langCode)) {
+        if (locale == newLocale) {
             log.debug("Do not need change the language");
             return;
         }
 
-        switch (langCode) {
-            case "en":
-                country = "EN";
-                break;
-            case "ru":
-                country = "RU";
-                break;
-            default:
-                raiseExceptionLangCode(langCode);
+        try {
+            LocaleCodes.valueOf(newLocale.toString());
+        } catch (IllegalArgumentException e) {
+            exceptionHelper.raiseExceptionLangCode(newLocale.getLanguage());
+            return;
         }
-        locale = new Locale(langCode, country);
-        dialogBundle = ResourceBundle.getBundle("weather", locale);
+
+        locale = newLocale;
+        exceptionHelper = new WeatherExceptionHelper(locale);
 
         log.debug("Language was changed");
+    }
+
+    // Inner objects
+
+    public enum LocaleCodes {
+        en,
+        ru
     }
 }
