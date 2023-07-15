@@ -4,10 +4,12 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import ru.sanddev.WeatherClient.Exception.WeatherException;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Locale;
 import java.util.Properties;
 
 /**
@@ -53,14 +55,14 @@ public class WeatherClientTest {
 
     @Test
     public void todayEn() {
-        setLanguage("en");
+        setLocale(Locale.ENGLISH);
         client.setCity("Moscow");
         todayCheck();
     }
 
     @Test
     public void todayRu() {
-        setLanguage("ru");
+        setLocale(new Locale("ru"));
         client.setCity("Москва");
         todayCheck();
     }
@@ -84,14 +86,14 @@ public class WeatherClientTest {
 
     @Test
     public void hourForecastEn() {
-        setLanguage("en");
+        setLocale(Locale.ENGLISH);
         client.setCity("Moscow");
         hourForecastCheck();
     }
 
     @Test
     public void hourForecastRu() {
-        setLanguage("ru");
+        setLocale(new Locale("ru"));
         client.setCity("Москва");
         hourForecastCheck();
     }
@@ -117,7 +119,7 @@ public class WeatherClientTest {
     @Ignore("Do need paid account Open weather")
     @Test
     public void dailyForecastEn() {
-        setLanguage("en");
+        setLocale(new Locale("en"));
         client.setCity("Moscow");
         dailyForecastCheck();
     }
@@ -125,7 +127,7 @@ public class WeatherClientTest {
     @Ignore("Do need paid account Open weather")
     @Test
     public void dailyForecastRu() {
-        setLanguage("ru");
+        setLocale(new Locale("ru"));
         client.setCity("Москва");
         dailyForecastCheck();
     }
@@ -133,9 +135,18 @@ public class WeatherClientTest {
     // Language
 
     @Test
+    public void changeLanguage() {
+        try {
+            client.setLocale(new Locale("ru"));
+        } catch (WeatherException e) {
+            Assert.fail();
+        }
+    }
+
+    @Test
     public void wrongLanguage() {
         try {
-            client.setLanguage("it");
+            client.setLocale(Locale.ITALY);
         } catch (WeatherException e) {
             return;
         }
@@ -161,23 +172,23 @@ public class WeatherClientTest {
 
     @Test
     public void wrongCityEn() {
-        setLanguage("en");
+        setLocale(new Locale("en"));
         client.setCity("Moskow");
         wrongCityCheck();
     }
 
     @Test
     public void wrongCityRu() {
-        setLanguage("ru");
+        setLocale(new Locale("ru"));
         client.setCity("Масква");
         wrongCityCheck();
     }
 
     // Service methods
 
-    private void setLanguage(String langCode) {
+    private void setLocale(Locale locale) {
         try {
-            client.setLanguage(langCode);
+            client.setLocale(locale);
         } catch (WeatherException e) {
             Assert.fail(e.getLocalizedMessage());
         }

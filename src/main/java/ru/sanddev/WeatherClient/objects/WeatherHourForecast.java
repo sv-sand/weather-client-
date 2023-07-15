@@ -2,7 +2,6 @@ package ru.sanddev.WeatherClient.objects;
 
 import lombok.Data;
 import lombok.extern.log4j.Log4j;
-import ru.sanddev.WeatherClient.WeatherClient;
 import ru.sanddev.WeatherClient.objects.nested.City;
 import ru.sanddev.WeatherClient.objects.nested.HourForecastListPosition;
 
@@ -16,35 +15,28 @@ import java.util.Set;
 
 @Log4j
 @Data
-public class WeatherHourForecast {
-
-    private WeatherClient client;
+public class WeatherHourForecast implements WeatherData {
 
     private City city;
-    private Set<HourForecastListPosition> list;
 
-    // Methods
+    private Set<HourForecastListPosition> list;
 
     public WeatherHourForecast() {
         list = new HashSet<>();
     }
 
+    // Methods
+
+    @Override
+    public boolean isEmpty() {
+        return list.isEmpty();
+    }
+
+    @Override
     public void convertTemperatureUnits(TemperatureUnits targetTempUnits) {
         for (var item: list) {
             log.debug("Prepare temperature conversion by " + item.getDate());
             item.getMain().convertTemperature(targetTempUnits);
         }
-    }
-
-    public boolean isEmpty() {
-        return list.isEmpty();
-    }
-
-    public String toString() {
-        if(client == null)
-            return "";
-
-        return client.getWeatherHourlyForecastPresentation(this);
-
     }
 }

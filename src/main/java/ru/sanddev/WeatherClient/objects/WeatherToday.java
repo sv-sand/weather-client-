@@ -1,7 +1,6 @@
 package ru.sanddev.WeatherClient.objects;
 
 import lombok.Data;
-import ru.sanddev.WeatherClient.WeatherClient;
 import ru.sanddev.WeatherClient.objects.nested.*;
 
 import java.util.Date;
@@ -12,18 +11,15 @@ import java.util.Date;
  */
 
 @Data
-public class WeatherToday {
+public class WeatherToday implements WeatherData{
 
-    private WeatherClient client;
+    private City city;
 
     // Time of data calculation, unix, UTC
     private Date date;
 
     // Shift in seconds from UTC
     private long timezone;
-
-    // City name
-    private String city;
 
     // System data
     private SystemData sys;
@@ -57,16 +53,13 @@ public class WeatherToday {
 
     // Methods
 
-    public String toString() {
-        if(client == null)
-            return "";
-
-        return client.getWeatherTodayPresentation(this);
-
-    }
-
+    @Override
     public boolean isEmpty() {
         return date == null;
     }
 
+    @Override
+    public void convertTemperatureUnits(TemperatureUnits targetTempUnits) {
+        getMain().convertTemperature(targetTempUnits);
+    }
 }

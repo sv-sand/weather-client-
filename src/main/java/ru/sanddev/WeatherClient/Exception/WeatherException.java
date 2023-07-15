@@ -1,4 +1,4 @@
-package ru.sanddev.WeatherClient;
+package ru.sanddev.WeatherClient.Exception;
 
 /**
  * @author Alexander Svetlakov <sve.snd@gmail.com>
