@@ -9,13 +9,6 @@
 /db/
 /config/
 
-# Java
-*.class
-*.jar
-*.war
-*.nar
-*.ear
-
 # System
 *.zip
 *.tar.gz
