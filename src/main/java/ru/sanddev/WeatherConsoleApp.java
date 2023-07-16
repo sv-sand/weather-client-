@@ -44,7 +44,7 @@ public class WeatherConsoleApp {
         log.debug("Initialization start");
 
         locale = DEFAULT_LOCALE;
-        dialogs = ResourceBundle.getBundle("app");
+        dialogs = ResourceBundle.getBundle("dialogs", locale);
         config = getConfig();
 
         client = new WeatherClient(config.getProperty("apiId"));
@@ -79,7 +79,7 @@ public class WeatherConsoleApp {
         Scanner scanner = new Scanner(System.in);
         do{
             log.debug("Wait user command");
-            System.out.print("command>");
+            System.out.print(dialogs.getString("command") + ">");
             command = scanner.nextLine()
                     .toLowerCase(Locale.ROOT);
 
@@ -146,10 +146,8 @@ public class WeatherConsoleApp {
         // Set language to this console app
         switch (langCode) {
             case "en":
-                locale = new Locale(langCode, "EN");
-                break;
             case "ru":
-                locale = new Locale(langCode, "RU");
+                locale = new Locale(langCode);
                 break;
             default:
                 log.error(String.format("Language with code %s not supported", langCode));
