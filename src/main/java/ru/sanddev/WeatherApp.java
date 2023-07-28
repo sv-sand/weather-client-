@@ -1,5 +1,6 @@
 package ru.sanddev;
 
+import lombok.Getter;
 import lombok.extern.log4j.Log4j;
 import ru.sanddev.WeatherClient.Exception.WeatherException;
 import ru.sanddev.WeatherClient.WeatherClient;
@@ -7,7 +8,6 @@ import ru.sanddev.WeatherClient.objects.WeatherDailyForecast;
 import ru.sanddev.WeatherClient.objects.WeatherHourForecast;
 import ru.sanddev.WeatherClient.objects.WeatherToday;
 
-import java.io.InputStream;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.Scanner;
@@ -22,25 +22,29 @@ public class WeatherApp {
 
     private static final Locale DEFAULT_LOCALE = Locale.ENGLISH;
 
-    private final Scanner scanner;
+    @Getter
     private Locale locale;
     private ResourceBundle dialogs;
-    private WeatherClient client;
+    private final WeatherClient client;
+    private final Scanner scanner;
 
     public WeatherApp(String appId) {
-
-        locale = DEFAULT_LOCALE;
-        dialogs = ResourceBundle.getBundle("dialogs", locale);
-        client = new WeatherClient(appId);
+        init();
         scanner = new Scanner(System.in);
+        client = new WeatherClient(appId);
     }
 
-    public WeatherApp(String appId, InputStream source) {
+    public WeatherApp(WeatherClient client, Scanner scanner) {
+        init();
+        this.scanner = scanner;
+        this.client = client;
+    }
 
+    // Methods
+
+    private void init() {
         locale = DEFAULT_LOCALE;
         dialogs = ResourceBundle.getBundle("dialogs", locale);
-        client = new WeatherClient(appId);
-        scanner = new Scanner(source);
     }
 
     public void startUserInterface() {
