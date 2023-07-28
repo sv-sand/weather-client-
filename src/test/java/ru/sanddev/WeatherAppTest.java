@@ -28,19 +28,19 @@ public class WeatherAppTest {
 
     @BeforeAll
     public static void init() {
-        try(MockedStatic<WeatherComposer> composer = Mockito.mockStatic(WeatherComposer.class)) {
-            composer.when(
-                    () -> WeatherComposer.composeWeatherToday(Mockito.any(), Mockito.any(), Mockito.any())
-            ).thenReturn("Here is fake weather today!");
+        MockedStatic<WeatherComposer> composer = Mockito.mockStatic(WeatherComposer.class);
+        composer.when(
+                () -> WeatherComposer.composeWeatherToday(Mockito.any(), Mockito.any(), Mockito.any())
+        ).thenReturn("Here is fake weather today!");
 
-            composer.when(
-                    () -> WeatherComposer.composeWeatherHourlyForecast(Mockito.any(), Mockito.any(), Mockito.any())
-            ).thenReturn("Here is fake weather hour forecast!");
+        composer.when(
+                () -> WeatherComposer.composeWeatherHourlyForecast(Mockito.any(), Mockito.any(), Mockito.any())
+        ).thenReturn("Here is fake weather hour forecast!");
 
-            composer.when(
-                    () -> WeatherComposer.composeWeatherDailyForecast(Mockito.any(), Mockito.any(), Mockito.any())
-            ).thenReturn("Here is fake weather day forecast!");
-        }
+        composer.when(
+                () -> WeatherComposer.composeWeatherDailyForecast(Mockito.any(), Mockito.any(), Mockito.any())
+        ).thenReturn("Here is fake weather day forecast!");
+
     }
 
     @Test
